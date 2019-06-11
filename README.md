@@ -1,3 +1,3 @@
 # PerlinMountains
 
-A single view IOS app that shows a mountain range that was generated with Perlin's algorithm.
+A processing sketch that generates a terrain with perlin noise based on audio input.
