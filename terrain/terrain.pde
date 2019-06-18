@@ -1,67 +1,64 @@
-// https://medium.com/@nickobrien/diamond-square-algorithm-explanation-and-c-implementation-5efa891e486f
+// create a terrain instance
+Terrain t = new Terrain();
 
 void setup() {
-
+    // create a 3D canvas
+    size(800, 600, P3D);
 }
 
 void draw() {
+    background(50);
+    positionCanvas();
+    t.display();
+}
 
+void positionCanvas() {
+    translate(0, height / 2, 0);
+    rotateX(PI / 3); // rotate canvas so that we don't see the mountains straight from the top
 }
 
 class Terrain {
-    int arraySize;
-    int max;
-    int map[][];
+    int cols, rows;
+    int scl; // determines the size of the triangles
+    int w, h; // width and height - or better depth -  of the terrain
+    int maxHeight; // defines the maximum height a mountain can have
+    float[][] heightMap; // contains the height - or z value - for each vertice
 
-    Terrain(int detail) {
-        arraySize = pow(2, detail) + 1;
-        max = size - 1;
-        map = new int[size][size];
-    }
+    Terrain() {
+        w = 820;
+        h = 600;
+        scl = 10;
+        maxHeight = 150;
 
-    // set the corners to a seed value - half of the maximum height
-    void setCorners(){
-        map[0][0] = max / 2;
-        map[0][max] = max / 2;
-        map[max][0] = max / 2;
-        map[max][max] = max / 2;
-    }
+        cols = w / scl;
+        rows = h / scl;
 
-    // calculates terrain using the diamond square algorithm
-    // alternately calls squareStep() and diamondStep()
-    void diamondSquare(size) {
-        float half = max / 2;
+        heightMap = new float[cols][rows];
 
-        if (half < 1) {
-            // if all values are set -> algorithm is done
-            return;
-        }
-
-        // square steps
-        for (int y = half; y < size; y += size) {
-            for (int x = half; x < size; x += size) {
-                squareStep(x % size; y % size, half);
+        // Set initial values
+        for (int x = 0; x < cols; x++) {
+            for (int y = 0; y < rows; y++) {
+                heightMap[x][y] = 0;
             }
         }
+    }
 
-        // diamond steps
-        int col = 0;
-        for (int x = 0; x < size; x += half) {
-            col += 1;
-            if (col % 2 == 1) {
-                for (int y = half; y < size; y += size) {
-                    diamondStep(x % size, y % size, half);
-                }
-            } else {
-                for (int y = 0; y < size; y += size) {
-                    diamondStep(x % size, y % size, half);
-                }
+    void calculateZValues() {
+        float xoff = 0.01;
+        float yoff = 0.01;
+    }
+
+    void display() {
+        stroke(255);
+        noFill();
+
+        for (int y = 0; y < rows - 1; y++) {
+            beginShape(TRIANGLE_STRIP); // Build triangle strip row by row
+            for (int x = 0; x < cols; x++) {
+                vertex(x * scl, y * scl, heightMap[x][y]);
+                vertex(x * scl, (y + 1) * scl, heightMap[x][y+1]);
             }
-
-            diamondSquare(size / 2);
+            endShape();
         }
-
-
-
     }
 }
