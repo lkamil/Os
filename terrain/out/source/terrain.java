@@ -44,24 +44,36 @@ class Terrain {
         w = 820;
         h = 600;
         scl = 10;
-        maxHeight = 150;
+        maxHeight = 200;
 
         cols = w / scl;
         rows = h / scl;
 
         heightMap = new float[cols][rows];
 
-        // Set initial values
-        for (int x = 0; x < cols; x++) {
-            for (int y = 0; y < rows; y++) {
-                heightMap[x][y] = 0;
-            }
-        }
+        calculateZValues();
+
+        // // Set initial values
+        // for (int x = 0; x < cols; x++) {
+        //     for (int y = 0; y < rows; y++) {
+        //         heightMap[x][y] = 0;
+        //     }
+        // }
     }
 
     public void calculateZValues() {
-        float xoff = 0.01f;
-        float yoff = 0.01f;
+        float yoff = 0.0f;
+        for (int y = 0; y < rows; y++) {
+            float xoff = 0.0f; // set xoff to 0 before traversing a new row!
+            for (int x = 0; x < cols; x++) {
+
+                // set a z value for each element using perlin noise
+                heightMap[x][y] = map(noise(xoff, yoff), 0, 1, 0, maxHeight); 
+
+                xoff += 0.1f;  // increase xoff value before moving on to the next col
+            }
+            yoff += 0.1f; // increase xoff value before traversing a new row
+        }
     }
 
     public void display() {
