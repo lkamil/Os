@@ -18,15 +18,17 @@ public class terrain extends PApplet {
 Terrain t = new Terrain();
 
 // values for camera
-float centerY = height / 2;
-float centerZ = 100;
-float cameraAngle = 20.0f;
+float centerHeight = 100;
+float cameraAngle = 60.0f;
+float shift = 0; // for moving the camera to fly over the terrain
 
 public void setup() {
     // create a 3D canvas
     
     // camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
-    camera(width/2, height, centerZ + centerY / tan(cameraAngle * PI / 180), width/2, centerY, centerZ, 0, 1, 0);
+    // camera(width/2, height, centerZ + centerY / tan(cameraAngle * PI / 180), width/2, centerY, centerZ, 0, 1, 0);
+    camera(width/2, 0, centerHeight + (height / 2) / tan(cameraAngle * PI / 180), width/2, (-height / 2), centerHeight, 0, 1, 0);
+    
 }
 
 public void draw() {
@@ -34,6 +36,15 @@ public void draw() {
     // positionCanvas();
     t.display();
     // t.displayHeightmap(); // comment out camera() in setup to draw heightmap correctly
+
+    t.fly();
+    moveCamera();
+}
+
+public void moveCamera() {
+    shift += 0.5f;
+    //camera(width/2, height - shift, centerZ + centerY / tan(cameraAngle * PI / 180), width/2, centerY - shift, centerZ, 0, 1, 0);
+    camera(width/2, 0 - shift, centerHeight + (height / 2) / tan(cameraAngle * PI / 180), width/2, (-height / 2) - shift, centerHeight, 0, 1, 0);
 }
 
 public void positionCanvas() {
@@ -77,28 +88,30 @@ class Terrain {
         }
     }
 
+    // generates a new row and moves camera
+    public void fly() {
+        calculateNewRow();
+    }
+
+    public void calculateNewRow() {
+        // create new array, with an additional row?
+        for(int x = 0; x < cols; x++) {
+            append(heightMap[x], 500);
+        }
+        
+    }
+
     public void display() {
-        //stroke(255);
-        noFill();
+        stroke(255);
+        //noFill();
+        fill(255, 20);
 
         for (int y = 0; y < rows - 1; y++) {
-            if ( y < rows / 5) {
-                stroke(150);
-            } else if (y < rows / 4) {
-                stroke(180);
-            } else if (y < rows / 3) {
-                stroke(210);
-            } else if (y < rows / 2) {
-                stroke(235);
-            } else {
-                stroke(255);
-            }
-
             int widthOffset = 100;
             beginShape(TRIANGLE_STRIP); // Build triangle strip row by row
             for (int x = 0; x < cols; x++) {
-                vertex(x * scl - widthOffset, y * scl, heightMap[x][y]);
-                vertex(x * scl - widthOffset, (y + 1) * scl, heightMap[x][y+1]);
+                vertex(x * scl - widthOffset, - y * scl, heightMap[x][y]);
+                vertex(x * scl - widthOffset, - (y + 1) * scl, heightMap[x][y+1]);
             }
             endShape();
         }
