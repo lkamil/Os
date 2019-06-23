@@ -1,3 +1,7 @@
+// Note:
+// The camera moves deeper and deeper in 3D space (overflow danger?)
+// The code seems to be efficient though, because "old" landscape that was displayed doesn't get displayed anymore
+
 // create a terrain instance
 Terrain t = new Terrain();
 
@@ -17,8 +21,8 @@ void setup() {
 }
 
 void draw() {
+    //println(frameRate);
     background(50);
-    // positionCanvas();
     t.display();
     // t.displayHeightmap(); // comment out camera() in setup to draw heightmap correctly
 
@@ -27,18 +31,15 @@ void draw() {
 }
 
 void moveCamera() {
-    cameraY -= 2;
+    cameraY -= 5;
     //camera(width/2, height - shift, centerZ + centerY / tan(cameraAngle * PI / 180), width/2, centerY - shift, centerZ, 0, 1, 0);
     camera(width/2, cameraY, centerHeight + (height / 2) / tan(cameraAngle * PI / 180), width/2, (-height / 2) + cameraY, centerHeight, 0, 1, 0);
 }
 
-void positionCanvas() {
-    translate(0, height / 2, 0);
-    rotateX(PI / 3); // rotate canvas so that we don't see the mountains straight from the top
-}
-
 class Terrain {
     int cols, rows;
+    int startRow = 0; // the first row that needs to be displayes (old rows don't need to be displayed,
+    // because they are not in the camera frame)
     int scl; // determines the size of the triangles
     int w, h; // width and height - or better depth -  of the terrain
     int maxHeight; // defines the maximum height a mountain can have
@@ -79,6 +80,7 @@ class Terrain {
     void fly() {
         if ((cameraY % scl) == 0) {
             calculateNewRow();
+            startRow += 1; // old rows no longer need to be displayed
         }
     }
 
@@ -94,9 +96,6 @@ class Terrain {
         }
         yoff += 0.1;
         rows += 1;
-
-        // TODO: if rows is bigger than threshold: move camera back and make a copy of the array only containing
-        // the current values
     }
 
     void display() {
@@ -105,7 +104,7 @@ class Terrain {
         hint(DISABLE_DEPTH_TEST);
         fill(255, 50);
 
-        for (int y = 0; y < rows - 1; y++) {
+        for (int y = startRow; y < rows - 1; y++) {
             int widthOffset = 100;
             beginShape(TRIANGLE_STRIP); // Build triangle strip row by row
             for (int x = 0; x < cols; x++) {
@@ -127,17 +126,3 @@ class Terrain {
         }
     }
 }
-
-// class 2DArray {
-//     ArrayList<float[]> rows = new ArrayList<float[]>();
-
-//     2DArray(cols) {
-//         float[] cols = new float[cols];
-//     }
-
-//     // vals = coumn values for the new row
-//     void appendRow(float[] vals {
-//         rows.add(vals);
-//     }
-// }
-
