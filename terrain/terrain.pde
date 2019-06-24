@@ -1,40 +1,48 @@
-// Note:
-// The camera moves deeper and deeper in 3D space (overflow danger?)
-// The code seems to be efficient though, because "old" landscape that was displayed doesn't get displayed anymore
 
-// create a terrain instance
-Terrain t = new Terrain();
+// ______________________
+// ___ Global Objects ___
+// ______________________
+// create new terrain and new camera object
+Terrain terrain = new Terrain();
+Camera camera = new Camera();
 
-// values for camera
-float centerHeight = 100;
-float cameraAngle = 60.0;
-float shift = 0; // for moving the camera to fly over the terrain
-float cameraY = 0;
+// ___________________________
+// ___  setup() and draw() ___
+// ___________________________
 
 void setup() {
     // create a 3D canvas
     size(800, 600, P3D);
-    // camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
-    // camera(width/2, height, centerZ + centerY / tan(cameraAngle * PI / 180), width/2, centerY, centerZ, 0, 1, 0);
-    camera(width/2, cameraY, centerHeight + (height / 2) / tan(cameraAngle * PI / 180), width/2, (-height / 2), centerHeight, 0, 1, 0);
-    
+    camera.setToDefaultPosition();  
 }
 
 void draw() {
-    //println(frameRate);
     background(50);
-    t.display();
+    
+    flyOverTerrain();
+    camera.run();
+    terrain.display();
+    
+    // println(frameRate);
     // t.displayHeightmap(); // comment out camera() in setup to draw heightmap correctly
-
-    t.fly();
-    moveCamera();
 }
 
-void moveCamera() {
-    cameraY -= 5;
-    //camera(width/2, height - shift, centerZ + centerY / tan(cameraAngle * PI / 180), width/2, centerY - shift, centerZ, 0, 1, 0);
-    camera(width/2, cameraY, centerHeight + (height / 2) / tan(cameraAngle * PI / 180), width/2, (-height / 2) + cameraY, centerHeight, 0, 1, 0);
+// _________________________
+// ___  global functions ___
+// _________________________
+
+void flyOverTerrain() {
+    camera.moveForward();
+
+    if (camera.yPos % terrain.scl == 0) {
+        terrain.calculateNewRow(); 
+        terrain.startRow += 1;
+    }
 }
+
+// ____________________
+// ___ Terrain Class___
+// ____________________
 
 class Terrain {
     int cols, rows;
@@ -73,14 +81,6 @@ class Terrain {
                 xoff += 0.1;  // increase xoff value before moving on to the next col
             }
             yoff += 0.1; // increase xoff value before traversing a new row
-        }
-    }
-
-    // generates a new row and moves camera
-    void fly() {
-        if ((cameraY % scl) == 0) {
-            calculateNewRow();
-            startRow += 1; // old rows no longer need to be displayed
         }
     }
 
@@ -124,5 +124,60 @@ class Terrain {
                 rect(x*scl, y*scl, scl, scl);
             }
         }
+    }
+}
+
+// ___________________
+// ___ Camera Class___
+// ___________________
+
+class Camera {
+    // variables for moving and positioning the camera
+    float yoff; // determines how "far away" the camera is from the start point
+    float speed;
+
+    float angle; // angle of the camera for calculathin the z position
+    float zoff; // variable for moving the focus and the camera itself up
+
+    // x, y and z values place the camera
+    float xPos;
+    float yPos;
+    float zPos;
+
+    // x, y and z values of the scene determine where the camera's focus lies
+    float focusX;
+    float focusY;
+    float focusZ;
+
+    Camera() {
+        speed = 5;
+    }
+
+    void calculateZPos() {
+        zPos = abs(focusY) / tan(angle * PI / 180) + zoff;
+    }
+
+    void setToDefaultPosition() {
+        yoff = 0;
+
+        angle = 60.0;
+        zoff = 100;
+
+        focusX = width / 2;
+        focusY = -height / 2;
+        focusZ = zoff;
+
+        xPos = width / 2;
+        yPos = 0;
+        calculateZPos();
+    }
+
+    void moveForward() {
+        yPos -= speed;
+        focusY = -height / 2 + yPos;
+    }
+
+    void run() {
+        camera(xPos, yPos, zPos, focusX, focusY, focusZ, 0, 1, 0);
     }
 }
