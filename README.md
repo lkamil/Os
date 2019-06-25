@@ -1,3 +1,3 @@
-# PerlinMountains
+# Os
 
-A processing sketch that generates a terrain with perlin noise based on audio input.
+A processing sketch that generates a terrain based on live audio input.
