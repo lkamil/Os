@@ -1,10 +1,14 @@
+import processing.sound.*;
+
 
 // ______________________
 // ___ Global Objects ___
 // ______________________
+
 // create new terrain and new camera object
 Terrain terrain = new Terrain();
 Camera camera = new Camera();
+SoundAnalyzer analyzer = new SoundAnalyzer(this);
 
 // ___________________________
 // ___  setup() and draw() ___
@@ -13,11 +17,14 @@ Camera camera = new Camera();
 void setup() {
     // create a 3D canvas
     size(800, 600, P3D);
-    camera.setToDefaultPosition();  
+    camera.setToDefaultPosition(); 
+
 }
 
 void draw() {
     background(50);
+
+    println(analyzer.getLoudestFrequence());
     
     flyOverTerrain();
     camera.run();
@@ -35,8 +42,48 @@ void flyOverTerrain() {
     camera.moveForward();
 
     if (camera.yPos % terrain.scl == 0) {
-        terrain.calculateNewRow(); 
+        float l = analyzer.getLoudestFrequence();
+        terrain.calculateNewRow(l); 
         terrain.startRow += 1;
+    }
+}
+
+class SoundAnalyzer {
+    FFT fft;
+    AudioIn audio;
+
+    int bands = 8; // number of frequency bands for the FFT
+    float[] spectrum = new float[bands];
+
+    SoundAnalyzer(PApplet parent) {
+        fft = new FFT(parent, bands);
+
+        audio = new AudioIn(parent);
+        audio.start();
+
+        // set the audio input for the analyzer
+        fft.input(audio);
+    }
+
+    void calculateSpectrum() {
+        // calculates the current spectrum
+        fft.analyze(spectrum);
+    }
+
+    // returns a value between 0 and 1
+    // 1 = highest frequency is the loudest
+    // 0 = lowest frequency is the loudest
+    float getLoudestFrequence() {
+        calculateSpectrum();
+
+        float loudest = 0;
+        for (int i = 0; i < bands; i++) {
+            if (spectrum[i] > loudest) {
+                loudest = spectrum[i];
+            }
+        }
+
+        return map((loudest / bands), 0, 0.02, 0, 10);
     }
 }
 
@@ -55,6 +102,8 @@ class Terrain {
 
     float xoff = 0.0;
     float yoff = 0.0;
+
+    float offset = 0.1;
 
     Terrain() {
         w = 1000;
@@ -78,13 +127,14 @@ class Terrain {
                 // set a z value for each element using perlin noise
                 heightMap[x][y] = map(noise(xoff, yoff), 0, 1, 0, maxHeight); 
 
-                xoff += 0.1;  // increase xoff value before moving on to the next col
+                xoff += offset;  // increase xoff value before moving on to the next col
             }
-            yoff += 0.1; // increase xoff value before traversing a new row
+            yoff += offset; // increase xoff value before traversing a new row
         }
     }
 
-    void calculateNewRow() {
+    void calculateNewRow(float loudestFrequence) {
+        //maxHeight = maxHeight + int(loudestFrequence) * 20;
         int rowCount = heightMap[0].length; // amount of rows the heightMap array contains
         int y = rowCount;
         xoff = 0.0;
@@ -92,9 +142,9 @@ class Terrain {
             // add new row (increase length by one for each col)
             heightMap[x] = expand(heightMap[x], rowCount + 1);
             heightMap[x][y] = map(noise(xoff, yoff), 0,1, 0, maxHeight);
-            xoff += 0.1;
+            xoff += offset;
         }
-        yoff += 0.1;
+        yoff += offset;
         rows += 1;
     }
 
