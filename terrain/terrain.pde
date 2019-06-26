@@ -22,7 +22,9 @@ void setup() {
 }
 
 void draw() {
-    background(50);
+    background(220, 220, 255);
+    directionalLight(120, 120, 100, 1, -1, -1);
+    ambientLight(120,120,150);
 
     println(analyzer.getLoudestFrequence());
     
@@ -103,13 +105,15 @@ class Terrain {
     float xoff = 0.0;
     float yoff = 0.0;
 
-    float offset = 0.1;
+    float offset = 0.03;
+    float sealevel;
 
     Terrain() {
         w = 1000;
         h = 600;
-        scl = 10;
+        scl = 5;
         maxHeight = 200;
+        sealevel = maxHeight * 0.3;
 
         cols = w / scl;
         rows = h / scl;
@@ -125,7 +129,13 @@ class Terrain {
             for (int x = 0; x < cols; x++) {
 
                 // set a z value for each element using perlin noise
-                heightMap[x][y] = map(noise(xoff, yoff), 0, 1, 0, maxHeight); 
+                float z = map(noise(xoff, yoff), 0, 1, 0, maxHeight);
+
+                if (z < sealevel) {
+                    heightMap[x][y] = sealevel;
+                } else {
+                    heightMap[x][y] = z;
+                }
 
                 xoff += offset;  // increase xoff value before moving on to the next col
             }
@@ -141,7 +151,15 @@ class Terrain {
         for(int x = 0; x < cols; x++) { // traverse each col
             // add new row (increase length by one for each col)
             heightMap[x] = expand(heightMap[x], rowCount + 1);
-            heightMap[x][y] = map(noise(xoff, yoff), 0,1, 0, maxHeight);
+            // heightMap[x][y] = map(noise(xoff, yoff), 0,1, 0, maxHeight);
+            float z = map(noise(xoff, yoff), 0, 1, 0, maxHeight);
+
+            if (z < sealevel) {
+                heightMap[x][y] = sealevel;
+            } else {
+                heightMap[x][y] = z;
+            }
+
             xoff += offset;
         }
         yoff += offset;
@@ -149,19 +167,31 @@ class Terrain {
     }
 
     void display() {
-        stroke(255);
-        //noFill();
-        hint(DISABLE_DEPTH_TEST);
-        fill(255, 50);
+        //hint(DISABLE_DEPTH_TEST);
+        noStroke();
 
         for (int y = startRow; y < rows - 1; y++) {
             int widthOffset = 100;
             beginShape(TRIANGLE_STRIP); // Build triangle strip row by row
             for (int x = 0; x < cols; x++) {
+                fill(getColor(heightMap[x][y]));
                 vertex(x * scl - widthOffset, - y * scl, heightMap[x][y]);
+
+                fill(getColor(heightMap[x][y+1]));
                 vertex(x * scl - widthOffset, - (y + 1) * scl, heightMap[x][y+1]);
             }
             endShape();
+        }
+    }
+
+    color getColor(float z) {
+        if (z == sealevel) {
+            return color(135, 187, 255);
+        }
+        if (z > maxHeight * 0.6) {
+            return color(255);
+        } else {
+            return color(69, 173, 78);
         }
     }
 
