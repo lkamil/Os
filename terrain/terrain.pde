@@ -1,23 +1,19 @@
+
 import processing.sound.*;
 
-
-// ______________________
-// ___ Global Objects ___
-// ______________________
+// int lastFreq; // only for debugging
 
 // create new terrain and new camera object
 Terrain terrain = new Terrain();
 Camera camera = new Camera();
 SoundAnalyzer analyzer = new SoundAnalyzer(this);
-
-// ___________________________
-// ___  setup() and draw() ___
-// ___________________________
+// Weather weather = new Weather();
 
 void setup() {
     // create a 3D canvas
     size(800, 600, P3D);
-    camera.setToDefaultPosition(); 
+    camera.setToDefaultPosition();
+    // weather.setSunLocation();
 
 }
 
@@ -26,22 +22,25 @@ void draw() {
     directionalLight(120, 120, 100, 1, -1, -1);
     ambientLight(120,120,150);
 
-    println(analyzer.getLoudestFrequence());
-    
     flyOverTerrain();
+
     camera.run();
+    camera.moveDown(350);
+
     terrain.display();
+    // weather.display();
     
+    
+    // changeLandscape();
+
+
     // println(frameRate);
     // t.displayHeightmap(); // comment out camera() in setup to draw heightmap correctly
 }
 
-// _________________________
-// ___  global functions ___
-// _________________________
-
 void flyOverTerrain() {
     camera.moveForward();
+    // weather.moveSun(camera.speed);
 
     if (camera.yPos % terrain.scl == 0) {
         float l = analyzer.getLoudestFrequence();
@@ -50,48 +49,12 @@ void flyOverTerrain() {
     }
 }
 
-class SoundAnalyzer {
-    FFT fft;
-    AudioIn audio;
-
-    int bands = 8; // number of frequency bands for the FFT
-    float[] spectrum = new float[bands];
-
-    SoundAnalyzer(PApplet parent) {
-        fft = new FFT(parent, bands);
-
-        audio = new AudioIn(parent);
-        audio.start();
-
-        // set the audio input for the analyzer
-        fft.input(audio);
-    }
-
-    void calculateSpectrum() {
-        // calculates the current spectrum
-        fft.analyze(spectrum);
-    }
-
-    // returns a value between 0 and 1
-    // 1 = highest frequency is the loudest
-    // 0 = lowest frequency is the loudest
-    float getLoudestFrequence() {
-        calculateSpectrum();
-
-        float loudest = 0;
-        for (int i = 0; i < bands; i++) {
-            if (spectrum[i] > loudest) {
-                loudest = spectrum[i];
-            }
-        }
-
-        return map((loudest / bands), 0, 0.02, 0, 10);
-    }
+enum Landscape {
+        lakeland,
+        mountains,
+        desert
 }
 
-// ____________________
-// ___ Terrain Class___
-// ____________________
 
 class Terrain {
     int cols, rows;
@@ -105,22 +68,54 @@ class Terrain {
     float xoff = 0.0;
     float yoff = 0.0;
 
-    float offset = 0.03;
+    float offset;
     float sealevel;
+
+    Landscape currentLandscape;
 
     Terrain() {
         w = 1000;
         h = 600;
         scl = 5;
-        maxHeight = 200;
-        sealevel = maxHeight * 0.3;
 
         cols = w / scl;
         rows = h / scl;
 
         heightMap = new float[cols][rows];
 
+        // Default landscape: Mountains
+        // createMountains();
+        createLakeland();
+        // createDesert();
+
         calculateZValues();
+    }
+
+    void createLakeland() {
+        maxHeight = 150;
+        sealevel = maxHeight * 0.5;
+        offset = 0.03;
+
+        currentLandscape = Landscape.lakeland;
+
+    }
+
+    void createMountains() {
+        offset = 0.025;
+        maxHeight = 300;
+        sealevel = maxHeight * 0.3;
+
+        currentLandscape = Landscape.mountains;
+
+        // note: for harsher mountains, increase offset (and maybe raise sealevel)
+    }
+
+    void createDesert() {
+        maxHeight = 150;
+        offset = 0.007;
+        sealevel = 0;
+
+        currentLandscape = Landscape.desert;
     }
 
     void calculateZValues() {
@@ -131,7 +126,7 @@ class Terrain {
                 // set a z value for each element using perlin noise
                 float z = map(noise(xoff, yoff), 0, 1, 0, maxHeight);
 
-                if (z < sealevel) {
+                if (z <= sealevel) {
                     heightMap[x][y] = sealevel;
                 } else {
                     heightMap[x][y] = z;
@@ -154,7 +149,7 @@ class Terrain {
             // heightMap[x][y] = map(noise(xoff, yoff), 0,1, 0, maxHeight);
             float z = map(noise(xoff, yoff), 0, 1, 0, maxHeight);
 
-            if (z < sealevel) {
+            if (z <= sealevel) {
                 heightMap[x][y] = sealevel;
             } else {
                 heightMap[x][y] = z;
@@ -185,14 +180,40 @@ class Terrain {
     }
 
     color getColor(float z) {
-        if (z == sealevel) {
-            return color(135, 187, 255);
-        }
-        if (z > maxHeight * 0.6) {
-            return color(255);
-        } else {
-            return color(69, 173, 78);
-        }
+        switch(currentLandscape) {
+            case lakeland:
+                if (z == sealevel) {
+                    return color(23, 87, 126);
+                } else if (z < maxHeight * 0.55) {
+                    return color(228, 228, 199);
+                } else {
+                    //return color(69, 173, 78);
+                    float darken = map(z, maxHeight, maxHeight * 0.55, 0.2, 1);
+                    int r = int(darken * 146);
+                    int g = int(darken * 212);
+                    int b = int(darken * 97);
+                    return color(r, g, b);
+                    //(71, 120, 33)
+                }
+            case mountains:
+                // the sea gets a blue color
+                // the tips of the mountains are white
+                // the main part of the mountains is graadient from dark grey to light grey
+                if (z == sealevel) {
+                    return color(135, 187, 255);
+                } else if (z > maxHeight * 0.6) {
+                    return color(255);
+                } else {
+                    //return color(69, 173, 78);
+                    int greyVal = int(map(z, sealevel, maxHeight * 0.6, 50, 200));
+                    return color(greyVal);
+                }
+            case desert:
+                return color(255, 200, 61);
+            default:
+                println("Something went wrong!");
+                return color(255);
+        } 
     }
 
     void displayHeightmap() {
@@ -207,57 +228,40 @@ class Terrain {
     }
 }
 
-// ___________________
-// ___ Camera Class___
-// ___________________
+enum Condition {
+    sunny,
+    cloudy
+}
 
-class Camera {
-    // variables for moving and positioning the camera
-    float yoff; // determines how "far away" the camera is from the start point
-    float speed;
+class Weather {
+    Condition currentWeather;
 
-    float angle; // angle of the camera for calculathin the z position
-    float zoff; // variable for moving the focus and the camera itself up
+    float sunX;
+    float sunY;
+    float sunZ;
 
-    // x, y and z values place the camera
-    float xPos;
-    float yPos;
-    float zPos;
-
-    // x, y and z values of the scene determine where the camera's focus lies
-    float focusX;
-    float focusY;
-    float focusZ;
-
-    Camera() {
-        speed = 5;
+    Weather() {
+        // default weather condition is sunny
+        currentWeather = Condition.sunny;   
     }
 
-    void calculateZPos() {
-        zPos = abs(focusY) / tan(angle * PI / 180) + zoff;
+    void setSunLocation() {
+        sunX = width * 0.2;
+        sunY = -height;
+        sunZ = 200;
     }
 
-    void setToDefaultPosition() {
-        yoff = 0;
-
-        angle = 60.0;
-        zoff = 100;
-
-        focusX = width / 2;
-        focusY = -height / 2;
-        focusZ = zoff;
-
-        xPos = width / 2;
-        yPos = 0;
-        calculateZPos();
+    void moveSun(float speed) {
+        sunY -= speed;
     }
 
-    void moveForward() {
-        yPos -= speed;
-        focusY = -height / 2 + yPos;
-    }
-
-    void run() {
-        camera(xPos, yPos, zPos, focusX, focusY, focusZ, 0, 1, 0);
+    void display() {
+        switch(currentWeather) {
+            case sunny:
+            case cloudy:
+                fill(255, 255, 0);
+                translate(sunX, sunY, sunZ);
+                sphere(30);
+        }
     }
 }
