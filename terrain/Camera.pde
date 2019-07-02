@@ -86,8 +86,8 @@ class Camera {
         }
     }
 
-    void tiltDown() {
-
+    void setSpeed() {
+        // TODO: implement a function to change the speed of the camera!
     }
 
     void run() {

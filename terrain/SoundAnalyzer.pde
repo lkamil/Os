@@ -15,26 +15,39 @@ class SoundAnalyzer {
     SoundAnalyzer(PApplet parent) {
         fft = new FFT(parent, bands);
         audio = new AudioIn(parent);
-        audio.start(); // start capturing microphone input
+        //audio.start(); // start capturing microphone input
+        audio.play();
 
         // set the audio input for the analyzer
         fft.input(audio);
     }
 
-    void attachSoundFile(SoundFile audio) {
-        fft.input(audio);
-        audio.play();
-    }
+    // void attachSoundFile(SoundFile audio) {
+    //     fft.input(audio);
+    //     audio.play();
+    // }
 
     void calculateSpectrum() {
         // calculates the current spectrum
         fft.analyze(spectrum);
     }
 
-    // returns a value between 0 and 1
-    // 1 = highest frequency is the loudest
-    // 0 = lowest frequency is the loudest
-    int getLoudestFrequence() {
+    float highFreqsVol() {
+        calculateSpectrum();
+        int lower = int(bands * 0.97);
+        int upper = bands;
+        float vol = 0;
+
+        for (int i = lower; i < upper; i++) {
+            vol += spectrum[i];
+        }
+        float average = vol / (upper - lower);
+        return strictMap(average, 0, 0.00003, 0, 100); // value between 0 and 15
+
+    }
+
+    // returns a value equal to the cols in the Terrain object
+    int getLoudestFreq() {
         calculateSpectrum();
 
         int loudest = 0;
@@ -43,7 +56,19 @@ class SoundAnalyzer {
                 loudest = i;
             }
         }
+        return int(strictMap(loudest, 0, 10, 20, width / 5 - 20));
+    }
 
-        return loudest;
+    float getVol() {
+        calculateSpectrum();
+
+        float loudest = 0;
+        for (int i = 0; i < bands; i++) {
+            if (spectrum[i] > loudest) {
+                loudest = spectrum[i];
+            }
+        }
+        return strictMap(loudest, 0, 0.2, 0, 10);
+        //return loudest;
     }
 }

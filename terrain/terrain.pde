@@ -28,11 +28,10 @@ void draw() {
     camera.moveDown(350);
 
     terrain.display();
+
     // weather.display();
     
-    
     // changeLandscape();
-
 
     // println(frameRate);
     // t.displayHeightmap(); // comment out camera() in setup to draw heightmap correctly
@@ -43,8 +42,10 @@ void flyOverTerrain() {
     // weather.moveSun(camera.speed);
 
     if (camera.yPos % terrain.scl == 0) {
-        float l = analyzer.getLoudestFrequence();
-        terrain.calculateNewRow(l); 
+        float freq = analyzer.getLoudestFreq();
+        float vol = analyzer.getVol();
+        // println(analyzer.getVol());
+        terrain.calculateNewRow(freq, vol); 
         terrain.startRow += 1;
     }
 }
@@ -73,6 +74,9 @@ class Terrain {
 
     Landscape currentLandscape;
 
+    float rangeMaxHeight = 150;
+    int currentFreq = cols / 2;
+
     Terrain() {
         w = 1000;
         h = 600;
@@ -93,6 +97,7 @@ class Terrain {
 
     void createLakeland() {
         maxHeight = 150;
+        rangeMaxHeight = 150;
         sealevel = maxHeight * 0.5;
         offset = 0.03;
 
@@ -138,16 +143,55 @@ class Terrain {
         }
     }
 
-    void calculateNewRow(float loudestFrequence) {
-        //maxHeight = maxHeight + int(loudestFrequence) * 20;
+    void calculateNewRow(float loudestFreq, float vol) {
+        switch(currentLandscape) {
+            case lakeland:
+                // change of offset is determined by current volume
+                if (vol > 5 && offset < 0.03) {
+                    offset += 0.00025;
+                } else if (offset > 0.025) {
+                    offset -= 0.00025;
+                }
+
+                // increase or decrease currentFreq, depending if it grows or drops 
+                if (currentFreq < loudestFreq) {
+                    currentFreq += 1;
+                } else {
+                    currentFreq -= 1;
+                }
+            case mountains:
+                // createMountains();
+            case desert:
+                // createDesert();
+        }
+
+        // define range for increasing the maxHeight
+        float rangeMin = currentFreq - 30;
+        float rangeMax = currentFreq + 30;
+
         int rowCount = heightMap[0].length; // amount of rows the heightMap array contains
         int y = rowCount;
         xoff = 0.0;
+
         for(int x = 0; x < cols; x++) { // traverse each col
             // add new row (increase length by one for each col)
             heightMap[x] = expand(heightMap[x], rowCount + 1);
-            // heightMap[x][y] = map(noise(xoff, yoff), 0,1, 0, maxHeight);
-            float z = map(noise(xoff, yoff), 0, 1, 0, maxHeight);
+
+            // increase maxHeight depending on the index of the loudest frequency
+            if (x > rangeMin && x < rangeMax && rangeMaxHeight < 250) {
+                rangeMaxHeight += 0.7;
+            } else if (rangeMaxHeight > 150) {
+                rangeMaxHeight -= 0.7;
+            }
+
+            // maybe change overall maxHeight if the music is really loud
+            // if (vol > 2 && rangeMaxHeight < 250) {
+            //     rangeMaxHeight += 0.2;
+            // } else if (rangeMaxHeight > 150) {
+            //     rangeMaxHeight -= 0.2;
+            // }
+
+            float z = map(noise(xoff, yoff), 0, 1, 0, rangeMaxHeight);
 
             if (z <= sealevel) {
                 heightMap[x][y] = sealevel;
@@ -188,12 +232,14 @@ class Terrain {
                     return color(228, 228, 199);
                 } else {
                     //return color(69, 173, 78);
-                    float darken = map(z, maxHeight, maxHeight * 0.55, 0.2, 1);
+                    float darken = map(z, maxHeight, maxHeight * 0.55, 0.4, 1);
+                    if (darken < 0.4) {
+                        darken = 0.4;
+                    }
                     int r = int(darken * 146);
                     int g = int(darken * 212);
                     int b = int(darken * 97);
                     return color(r, g, b);
-                    //(71, 120, 33)
                 }
             case mountains:
                 // the sea gets a blue color
@@ -263,5 +309,18 @@ class Weather {
                 translate(sunX, sunY, sunZ);
                 sphere(30);
         }
+    }
+}
+
+float strictMap(float val, float min, float max, float newMin, float newMax) {
+    if (val <= min) {
+        return newMin;
+    } else if (val > max) {
+        return newMax;
+    } else {
+        float factor = (newMax - newMin) / (max - min);
+        float newVal = (val - min) * factor + newMin;
+
+        return newVal;
     }
 }
