@@ -88,8 +88,8 @@ class Terrain {
         heightMap = new float[cols][rows];
 
         // Default landscape: Mountains
-        // createMountains();
-        createLakeland();
+        createMountains();
+        // createLakeland();
         // createDesert();
 
         calculateZValues();
@@ -160,7 +160,12 @@ class Terrain {
                     currentFreq -= 1;
                 }
             case mountains:
-                // createMountains();
+                // change of offset is determined by current volume
+                if (vol > 5 && offset < 0.027) {
+                    offset += 0.00015;
+                } else if (offset > 0.023) {
+                    offset -= 0.00015;
+                }
             case desert:
                 // createDesert();
         }
@@ -168,6 +173,14 @@ class Terrain {
         // define range for increasing the maxHeight
         float rangeMin = currentFreq - 30;
         float rangeMax = currentFreq + 30;
+
+        // increase or decrease currentFreq, depending if it grows or drops 
+        if (currentFreq < loudestFreq) {
+            currentFreq += 1;
+        } else {
+            currentFreq -= 1;
+        }
+
 
         int rowCount = heightMap[0].length; // amount of rows the heightMap array contains
         int y = rowCount;
@@ -177,11 +190,21 @@ class Terrain {
             // add new row (increase length by one for each col)
             heightMap[x] = expand(heightMap[x], rowCount + 1);
 
-            // increase maxHeight depending on the index of the loudest frequency
-            if (x > rangeMin && x < rangeMax && rangeMaxHeight < 250) {
-                rangeMaxHeight += 0.7;
-            } else if (rangeMaxHeight > 150) {
-                rangeMaxHeight -= 0.7;
+            switch (currentLandscape) {
+                case lakeland:
+                    // increase maxHeight depending on the index of the loudest frequency
+                    if (x > rangeMin && x < rangeMax && rangeMaxHeight < 250) {
+                        rangeMaxHeight += 0.7;
+                    } else if (rangeMaxHeight > 150) {
+                        rangeMaxHeight -= 0.7;
+                    }
+                case mountains:
+                    if (x > rangeMin && x < rangeMax && rangeMaxHeight < 500) {
+                        rangeMaxHeight += 0.7;
+                    } else if (rangeMaxHeight > 300) {
+                        rangeMaxHeight -= 0.7;
+                    }
+                case desert:
             }
 
             // maybe change overall maxHeight if the music is really loud
