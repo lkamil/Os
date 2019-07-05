@@ -61,6 +61,8 @@ class Terrain {
     float yoff = 0.0;
 
     Landscape landscape;
+    Palette palette = new Palette();
+    Paintbox paintbox = new Paintbox();
 
     //float increasedHeight = 150;
     int currentFreq = cols / 2;
@@ -186,51 +188,33 @@ class Terrain {
     color getColor(float z) {
         switch(landscape.currentLandForm) {
             case sea:
-                if (z > landscape.sealevel && z < 82.5) {
-                    return color(228, 228, 199);
-                } else if (z >= 82.5) {
-                    float darken = map(z, 150, 82.5, 0.4, 1);
-                    if (darken < 0.4) {
-                        darken = 0.4;
-                    }
-                    int r = int(darken * 146);
-                    int g = int(darken * 212);
-                    int b = int(darken * 97);
-                    return color(r, g, b);
-                }
-                return color(23, 87, 126);
             case lakeland:
                 if (z == landscape.sealevel) {
-                    return color(23, 87, 126);
+                    return paintbox.seaBlue;
                 } else if (z < landscape.height * 0.55) {
-                    return color(228, 228, 199);
+                    return paintbox.grassGreen;
                 } else {
-                    //return color(69, 173, 78);
                     float darken = map(z, landscape.height, landscape.height * 0.55, 0.4, 1);
                     if (darken < 0.4) {
                         darken = 0.4;
                     }
-                    int r = int(darken * 146);
-                    int g = int(darken * 212);
-                    int b = int(darken * 97);
-                    return color(r, g, b);
+                    return palette.changeBrightness(paintbox.pineGreen, darken);
                 }
             case mountains:
                 // the sea gets a blue color
                 // the tips of the mountains are white
                 // the main part of the mountains is graadient from dark grey to light grey
                 if (z == landscape.sealevel) {
-                    return color(135, 187, 255);
+                    return paintbox.lakeBlue;
                 } else if (z > landscape.height * 0.6) {
-                    return color(255);
+                    return paintbox.snow;
                 } else {
-                    //return color(69, 173, 78);
-                    int greyVal = int(map(z, landscape.sealevel, landscape.height * 0.6, 50, 200));
-                    return color(greyVal);
+                    float lighten = map(z, landscape.sealevel, landscape.height * 0.6, 1, 4);
+                    return palette.changeBrightness(paintbox.darkStone, lighten);
                 }
             default:
-                println("Something went wrong!");
-                return color(255);
+                println("No Colors defined for this landform!");
+                return color(0);
         } 
     }
 
@@ -245,7 +229,6 @@ class Terrain {
         }
     }
 }
-
 
 float strictMap(float val, float min, float max, float newMin, float newMax) {
     if (val <= min) {
