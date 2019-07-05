@@ -1,6 +1,6 @@
 # 🏔 Os
 
-Os is an generative art project that generates an endless video of different landscapes based on Audio Input.
+Os is a generative art project that generates an endless video of different landscapes based on audio input.
 Currently it is mainly developed as a part of [Resonance](https://github.com/sync-union/Resonance) (A project that combines two eternal streams of ever changing, resonating music and land).
 
 ### Disclaimer
