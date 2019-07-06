@@ -1,3 +1,5 @@
+// These classes are used by the Terrain class to set and change colors
+
 class Paintbox {
     color seaBlue = color(23, 87, 126);
     color lakeBlue = color(135, 187, 255);
