@@ -41,9 +41,10 @@ void flyOverTerrain() {
     weather.moveSun(camera.speed);
 
     if (camera.yPos % terrain.scl == 0) {
-        float freq = analyzer.getLoudestFreqFake();
-        float vol = analyzer.getVolFake();
-        // println(analyzer.getVol());
+        float freq = analyzer.getLoudestFreq();
+        // println(freq);
+        float vol = analyzer.getVol();
+        // println(vol);
         terrain.calculateNewRow(freq, vol); 
         terrain.startRow += 1;
     }

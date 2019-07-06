@@ -49,19 +49,18 @@ class SoundAnalyzer {
                 loudest = spectrum[i];
             }
         }
-        return strictMap(loudest, 0, 0.2, 0, 10);
+        return strictMap(loudest, 0, 0.02, 0, 10);
         //return loudest;
     }
 
     // Functions for mockup
-
     float getLoudestFreqFake() {
-        freqOff += 0.1;
-        return map(noise(freqOff), 0, 0.1, 20, width / 5 - 20);
+        freqOff += 0.01;
+        return map(noise(freqOff), 0, 0.01, 20, width / 5 - 20);
     }
 
     float getVolFake() {
-        volOff += 0.1;
-        return map(noise(volOff), 0, 0.1, 0, 10);
+        volOff += 0.01;
+        return map(noise(volOff), 0, 0.01, 0, 10);
     }
 }
