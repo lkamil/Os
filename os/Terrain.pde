@@ -1,6 +1,6 @@
 
 // The terrain class manages the terrain generation
-// It uses a landscape instance to determine what kind of terrain it generates
+// It uses a landForm instance to determine what kind of terrain it generates
 
 class Terrain {
     int cols, rows;
@@ -13,7 +13,7 @@ class Terrain {
     float xoff = 0.0;
     float yoff = 0.0;
 
-    Landscape landscape;
+    LandForm landForm;
     Palette palette = new Palette();
     Paintbox paintbox = new Paintbox();
 
@@ -31,7 +31,7 @@ class Terrain {
 
         heightMap = new float[cols][rows];
 
-        landscape = new Landscape(LandForm.mountains);
+        landForm = new LandForm(LandFormType.sea);
 
         calculateZValues(); // Calculates a HeightMap
     }
@@ -43,24 +43,26 @@ class Terrain {
             for (int x = 0; x < cols; x++) {
 
                 // set a z value for each element using perlin noise
-                float z = map(noise(xoff, yoff), 0, 1, 0, landscape.height);
+                float z = map(noise(xoff, yoff), 0, 1, 0, landForm.height);
 
-                if (z <= landscape.sealevel) {
-                    heightMap[x][y] = landscape.sealevel;
+                if (z <= landForm.sealevel) {
+                    heightMap[x][y] = landForm.sealevel;
                 } else {
                     heightMap[x][y] = z;
                 }
 
-                xoff += landscape.offset;  // increase xoff value before moving on to the next col
+                xoff += landForm.offset;  // increase xoff value before moving on to the next col
             }
-            yoff += landscape.offset; // increase xoff value before traversing a new row
+            yoff += landForm.offset; // increase xoff value before traversing a new row
         }
     }
 
     // Gets called when the camera flies over the terrain
     // Creates new Terrain based on Audio Input
     void calculateNewRow(float loudestFreq, float vol) {
-        // changes values to make landscape react to music
+        // println(landForm.currentLandForm.name());
+        // landForm.create();
+        // changes values to make landForm react to music
         reactToMusic(loudestFreq, vol);
 
         int rowCount = heightMap[0].length; // amount of rows the heightMap array contains
@@ -72,27 +74,27 @@ class Terrain {
             heightMap[x] = expand(heightMap[x], rowCount + 1);
 
             if (heightShouldBeChanged(x)) {
-                landscape.increasedHeight += 0.7;
-            } else if (landscape.increasedHeight > landscape.minHeight) {
-                landscape.increasedHeight -= 0.7;
+                landForm.increasedHeight += 0.7;
+            } else if (landForm.increasedHeight > landForm.minHeight) {
+                landForm.increasedHeight -= 0.7;
             }
 
-            float z = map(noise(xoff, yoff), 0, 1, 0, landscape.increasedHeight);
+            float z = map(noise(xoff, yoff), 0, 1, 0, landForm.increasedHeight);
 
-            if (z <= landscape.sealevel) {
-                heightMap[x][y] = landscape.sealevel;
+            if (z <= landForm.sealevel) {
+                heightMap[x][y] = landForm.sealevel;
             } else {
                 heightMap[x][y] = z;
             }
 
-            xoff += landscape.offset;
+            xoff += landForm.offset;
         }
-        yoff += landscape.offset;
+        yoff += landForm.offset;
         rows += 1;
     }
 
     boolean heightShouldBeChanged(int x) {
-        return (x > (currentFreq - 30) && x < (currentFreq + 30) && landscape.increasedHeight < landscape.maxHeight);
+        return (x > (currentFreq - 30) && x < (currentFreq + 30) && landForm.increasedHeight < landForm.maxHeight);
     }
 
     void reactToMusic(float loudestFreq, float vol) {
@@ -103,10 +105,10 @@ class Terrain {
     void changeOffsetForTerrainGeneration(float vol) {
         // change the offset that is used by the noise function 
         // depending on the frequency that currenty has highest volume
-        if (vol > 5 && landscape.offset < landscape.maxOffset) {
-            landscape.offset += landscape.offsetStep;
-        } else if (landscape.offset > landscape.minOffset) {
-            landscape.offset -= landscape.offsetStep;
+        if (vol > 5 && landForm.offset < landForm.maxOffset) {
+            landForm.offset += landForm.offsetStep;
+        } else if (landForm.offset > landForm.minOffset) {
+            landForm.offset -= landForm.offsetStep;
         }
     }
 
@@ -138,15 +140,15 @@ class Terrain {
     }
 
     color getColor(float z) {
-        switch(landscape.currentLandForm) {
+        switch(landForm.currentLandForm) {
             case sea:
             case lakeland:
-                if (z == landscape.sealevel) {
+                if (z == landForm.sealevel) {
                     return paintbox.seaBlue;
-                } else if (z < landscape.height * 0.55) {
+                } else if (z < landForm.height * 0.55) {
                     return paintbox.grassGreen;
                 } else {
-                    float darken = map(z, landscape.height, landscape.height * 0.55, 0.4, 1);
+                    float darken = map(z, landForm.height, landForm.height * 0.55, 0.4, 1);
                     if (darken < 0.4) {
                         darken = 0.4;
                     }
@@ -156,12 +158,12 @@ class Terrain {
                 // the sea gets a blue color
                 // the tips of the mountains are white
                 // the main part of the mountains is graadient from dark grey to light grey
-                if (z == landscape.sealevel) {
+                if (z == landForm.sealevel) {
                     return paintbox.lakeBlue;
-                } else if (z > landscape.height * 0.6) {
+                } else if (z > landForm.height * 0.6) {
                     return paintbox.snow;
                 } else {
-                    float lighten = map(z, landscape.sealevel, landscape.height * 0.6, 1, 4);
+                    float lighten = map(z, landForm.sealevel, landForm.height * 0.6, 1, 4);
                     return palette.changeBrightness(paintbox.darkStone, lighten);
                 }
             default:
@@ -174,7 +176,7 @@ class Terrain {
         noStroke();
         for (int y = 0; y < rows - 1; y++) {
             for (int x = 0; x < cols; x++) {
-                float c_val = map(heightMap[x][y], 0, landscape.height, 0, 255);
+                float c_val = map(heightMap[x][y], 0, landForm.height, 0, 255);
                 fill(c_val, c_val, c_val);
                 rect(x*scl, y*scl, scl, scl);
             }

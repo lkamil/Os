@@ -1,11 +1,12 @@
-enum LandForm {
-        lakeland,
-        mountains,
-        sea
+
+enum LandFormType {
+    lakeland,
+    mountains,
+    sea
 }
 
-class Landscape {
-    LandForm currentLandForm;
+class LandForm {
+    LandFormType currentLandForm;
     
     float height;
     float increasedHeight; // for increasing the MaxHeight of a segment based on the loudest Frequency
@@ -20,8 +21,8 @@ class Landscape {
     float minHeight;
 
 
-    Landscape(LandForm firstLandscape) {
-        currentLandForm = firstLandscape;
+    LandForm(LandFormType firstLandForm) {
+        currentLandForm = firstLandForm;
         switch (currentLandForm) {
             case mountains:
                 createMountains();
@@ -36,7 +37,7 @@ class Landscape {
     }
 
     void createLakeland() {
-        currentLandForm = LandForm.lakeland;
+        currentLandForm = LandFormType.lakeland;
 
         height = 150;
         increasedHeight = 150;
@@ -51,7 +52,7 @@ class Landscape {
     }
 
     void createMountains() {
-        currentLandForm = LandForm.mountains;
+        currentLandForm = LandFormType.mountains;
 
         height = 300;
         increasedHeight = 300;
@@ -64,12 +65,26 @@ class Landscape {
         maxHeight = 500;
         minHeight = 280;
     }
-
     void createSea() {
-        currentLandForm = LandForm.sea;
+        currentLandForm = LandFormType.sea;
 
         height = 0;
         sealevel = 75;
         offset = 0.05;
     }
+
+    void create(LandFormType newLandForm) {
+        currentLandForm = newLandForm;
+        switch(currentLandForm) {
+            case sea:
+                createSea();
+                break;
+            case lakeland:
+                createLakeland();
+                break;
+            case mountains:
+                createMountains();
+                break;
+        }
     }
+}

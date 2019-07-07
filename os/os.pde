@@ -1,7 +1,6 @@
 
 import processing.sound.*;
 
-
 // create new terrain and new camera object
 Terrain terrain = new Terrain();
 Camera camera = new Camera();
@@ -31,6 +30,8 @@ void draw() {
 
     terrain.display();
 
+    changeLandForm();
+
     // weather.display();
     // println(frameRate);
     // t.displayHeightmap(); // comment out camera() in setup to draw heightmap correctly
@@ -47,6 +48,16 @@ void flyOverTerrain() {
         // println(vol);
         terrain.calculateNewRow(freq, vol); 
         terrain.startRow += 1;
+    }
+}
+
+void changeLandForm() {
+    float now = millis();
+    if (now - m > 2500) {
+        terrain.landForm.create(LandFormType.lakeland);
+    }
+    if (now - m > 20000) {
+        terrain.landForm.create(LandFormType.mountains);
     }
 }
 
