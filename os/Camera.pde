@@ -58,7 +58,7 @@ class Camera {
 
         xPos = width / 2;
         yPos = 0;
-        zPos = 400;
+        zPos = 350;
 
         focusX = width / 2;
         focusY = -height / 2;

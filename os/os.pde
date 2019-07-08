@@ -8,6 +8,7 @@ SoundAnalyzer analyzer = new SoundAnalyzer(this);
 Weather weather = new Weather();
 
 int m;
+int counter;
 
 void setup() {
     // create a 3D canvas
@@ -15,6 +16,8 @@ void setup() {
     camera.setToDefaultPosition();
     m = millis(); // for timing events
     weather.setSunLocation();
+
+    counter = 0;
 }
 
 void draw() {
@@ -25,10 +28,10 @@ void draw() {
     flyOverTerrain();
 
     camera.run();
-    camera.moveDown(350);
 
     terrain.display();
 
+    moveCamera();
     changeLandForm();
 
     // weather.display();
@@ -51,17 +54,41 @@ void flyOverTerrain() {
     }
 }
 
+void moveCamera() {
+    if (terrain.landForm.currentLandForm == LandFormType.lakeland) {
+        camera.moveDown(290);
+    } else {
+        camera.moveUp(390);
+    }
+}
+
 void changeLandForm() {
-    float now = millis();
-    if ((now - m > 2500) && (now - m < 2600)) {
+    int now = int(millis());
+
+    if ((now - m > 2000) && (now - m < 2100)) {
         terrain.landForm.create(LandFormType.lakeland);
     }
-    if ((now - m > 7000) && (now - m < 7100 )) {
-        terrain.landForm.create(LandFormType.mountains);
+
+    if (counter == 1500) {
+        counter = 0;
+        int newLandForm = int(random(0, 2));
+        if (newLandForm < 1) {
+            println("Create Lakeland");
+            terrain.landForm.create(LandFormType.lakeland);
+        } else {
+            println("Create Mountains");
+            terrain.landForm.create(LandFormType.mountains);
+        }
     }
-    if ((now - m > 12000) && (now -m < 12100)){
-        terrain.landForm.create(LandFormType.lakeland);
-    }
+
+    counter += 1;
+    
+    // if ((now - m > 7000) && (now - m < 7100 )) {
+    //     terrain.landForm.create(LandFormType.mountains);
+    // }
+    // if ((now - m > 12000) && (now -m < 12100)){
+    //     terrain.landForm.create(LandFormType.lakeland);
+    // }
 }
 
 // strictMap() is a strict version of processing's map() function
