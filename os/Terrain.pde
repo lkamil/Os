@@ -180,8 +180,8 @@ class Terrain {
                     if (x < 3) {
                         return paintbox.seaBlue;
                     } 
-                    if ((x+3) > heightMap.length) {
-                        return paintbox.seaBlue;
+                    if (heightMap[x-3][y] == landForm.sealevel) {
+                        return paintbox.darkSeaBlue;
                     }
                     else {
                         return paintbox.seaBlue;

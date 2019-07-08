@@ -56,7 +56,7 @@ void flyOverTerrain() {
 
 void moveCamera() {
     if (terrain.landForm.currentLandForm == LandFormType.lakeland) {
-        camera.moveDown(290);
+        camera.moveDown(310);
     } else {
         camera.moveUp(390);
     }
