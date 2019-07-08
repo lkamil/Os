@@ -62,7 +62,7 @@ class Terrain {
     }
 
     void setColor(int x, int y) {
-        colors[x][y] = getColor(heightMap[x][y]);
+        colors[x][y] = getColor(x, y, heightMap[x][y]);
     }
 
     // Gets called when the camera flies over the terrain
@@ -89,6 +89,8 @@ class Terrain {
             } else if (landForm.increasedHeight > landForm.minHeight) {
                 landForm.increasedHeight -= 0.7;
             }
+
+            // println(landForm.increasedHeight);
 
             float z = map(noise(xoff, yoff), 0, 1, 0, landForm.increasedHeight);
 
@@ -140,6 +142,7 @@ class Terrain {
 
     void updateCurrentFrequency(float loudestFreq) {
          // increase or decrease currentFreq, depending if it grows or drops 
+         //println(currentFreq);
         if (currentFreq < loudestFreq) {
             currentFreq += 1;
         } else {
@@ -167,12 +170,22 @@ class Terrain {
         }
     }
 
-    color getColor(float z) {
+    color getColor(int x, int y, float z) {
         switch(landForm.currentLandForm) {
             case sea:
             case lakeland:
                 if (z == landForm.sealevel) {
-                    return paintbox.seaBlue;
+                    // println(x);
+                    // println(heightMap[0].length);
+                    if (x < 3) {
+                        return paintbox.seaBlue;
+                    } 
+                    if ((x+3) > heightMap.length) {
+                        return paintbox.seaBlue;
+                    }
+                    else {
+                        return paintbox.seaBlue;
+                    }
                 } else if (z < landForm.height * 0.55) {
                     return paintbox.grassGreen;
                 } else {

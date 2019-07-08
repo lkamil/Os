@@ -15,7 +15,6 @@ void setup() {
     camera.setToDefaultPosition();
     m = millis(); // for timing events
     weather.setSunLocation();
-
 }
 
 void draw() {
@@ -46,6 +45,7 @@ void flyOverTerrain() {
         // println(freq);
         float vol = analyzer.getVol();
         // println(vol);
+
         terrain.calculateNewRow(freq, vol); 
         terrain.startRow += 1;
     }
@@ -53,13 +53,13 @@ void flyOverTerrain() {
 
 void changeLandForm() {
     float now = millis();
-    if (now - m > 2500) {
+    if ((now - m > 2500) && (now - m < 2600)) {
         terrain.landForm.create(LandFormType.lakeland);
     }
-    if (now - m > 7000) {
+    if ((now - m > 7000) && (now - m < 7100 )) {
         terrain.landForm.create(LandFormType.mountains);
     }
-    if (now - m > 12000) {
+    if ((now - m > 12000) && (now -m < 12100)){
         terrain.landForm.create(LandFormType.lakeland);
     }
 }

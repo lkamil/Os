@@ -2,6 +2,7 @@
 
 class Paintbox {
     color seaBlue = color(23, 87, 126);
+    color darkSeaBlue = color(20, 74, 108);
     color lakeBlue = color(135, 187, 255);
     color snow = color(255);
     color darkStone = color(50);
