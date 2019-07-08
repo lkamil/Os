@@ -96,9 +96,6 @@ class Terrain {
                 heightMap[x][y] = landForm.sealevel;
             }
             else if ((z - (heightMap[x][y-1])) > 20 || diffIsTooHigh) {
-                if (diffIsTooHigh == false) {
-                    recalcOldXs(x, y);
-                }
                 smoothTransition(x, y, z);
                 diffIsTooHigh = true;
             } else {
@@ -111,17 +108,6 @@ class Terrain {
         }
         yoff += landForm.offset;
         rows += 1;
-    }
-
-    void recalcOldXs(int x, int y) {
-        for (int oldX = 0; oldX < x; oldX++) {
-            float diff = abs(heightMap[oldX][y] - (heightMap[oldX][y-1]));
-            float fallBackHeight = landForm.increasedHeight-diff*1.5;
-            if(fallBackHeight <= 160) {
-                fallBackHeight = 160;
-            }
-            heightMap[oldX][y] = map(noise(xoff, yoff), 0, 1, 0, fallBackHeight);
-        }
     }
 
     void smoothTransition(int x, int y, float z) {
