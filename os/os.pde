@@ -56,8 +56,11 @@ void changeLandForm() {
     if (now - m > 2500) {
         terrain.landForm.create(LandFormType.lakeland);
     }
-    if (now - m > 20000) {
+    if (now - m > 7000) {
         terrain.landForm.create(LandFormType.mountains);
+    }
+    if (now - m > 12000) {
+        terrain.landForm.create(LandFormType.lakeland);
     }
 }
 

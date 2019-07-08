@@ -2,7 +2,8 @@
 enum LandFormType {
     lakeland,
     mountains,
-    sea
+    sea,
+    transition
 }
 
 class LandForm {
@@ -19,7 +20,6 @@ class LandForm {
     float offsetStep;
     float maxHeight;
     float minHeight;
-
 
     LandForm(LandFormType firstLandForm) {
         currentLandForm = firstLandForm;

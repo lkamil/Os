@@ -9,6 +9,7 @@ class Terrain {
     int scl; // determines the size of the triangles
     int w, h; // width and height - or better depth -  of the terrain
     float[][] heightMap; // contains the height - or z value - for each vertice
+    color[][] colors; // stores the colors of the z values
 
     float xoff = 0.0;
     float yoff = 0.0;
@@ -30,6 +31,7 @@ class Terrain {
         rows = h / scl;
 
         heightMap = new float[cols][rows];
+        colors = new color[cols][rows];
 
         landForm = new LandForm(LandFormType.sea);
 
@@ -51,10 +53,16 @@ class Terrain {
                     heightMap[x][y] = z;
                 }
 
+                setColor(x, y);
+
                 xoff += landForm.offset;  // increase xoff value before moving on to the next col
             }
             yoff += landForm.offset; // increase xoff value before traversing a new row
         }
+    }
+
+    void setColor(int x, int y) {
+        colors[x][y] = getColor(heightMap[x][y]);
     }
 
     // Gets called when the camera flies over the terrain
@@ -69,9 +77,12 @@ class Terrain {
         int y = rowCount;
         xoff = 0.0;
 
+        boolean diffIsTooHigh = false;
+
         for(int x = 0; x < cols; x++) { // traverse each col
             // add new row (increase length by one for each col)
             heightMap[x] = expand(heightMap[x], rowCount + 1);
+            colors[x] = expand(colors[x], rowCount + 1);
 
             if (heightShouldBeChanged(x)) {
                 landForm.increasedHeight += 0.7;
@@ -83,14 +94,43 @@ class Terrain {
 
             if (z <= landForm.sealevel) {
                 heightMap[x][y] = landForm.sealevel;
+            }
+            else if ((z - (heightMap[x][y-1])) > 20 || diffIsTooHigh) {
+                if (diffIsTooHigh == false) {
+                    recalcOldXs(x, y);
+                }
+                smoothTransition(x, y, z);
+                diffIsTooHigh = true;
             } else {
                 heightMap[x][y] = z;
             }
+
+            setColor(x, y);
 
             xoff += landForm.offset;
         }
         yoff += landForm.offset;
         rows += 1;
+    }
+
+    void recalcOldXs(int x, int y) {
+        for (int oldX = 0; oldX < x; oldX++) {
+            float diff = abs(heightMap[oldX][y] - (heightMap[oldX][y-1]));
+            float fallBackHeight = landForm.increasedHeight-diff*1.5;
+            if(fallBackHeight <= 160) {
+                fallBackHeight = 160;
+            }
+            heightMap[oldX][y] = map(noise(xoff, yoff), 0, 1, 0, fallBackHeight);
+        }
+    }
+
+    void smoothTransition(int x, int y, float z) {
+        float diff = (z - (heightMap[x][y-1]));
+        float fallBackHeight = landForm.increasedHeight-diff*1.5;
+        if(fallBackHeight <= 160) {
+            fallBackHeight = 160;
+        }
+        heightMap[x][y] = map(noise(xoff, yoff), 0, 1, 0, fallBackHeight);
     }
 
     boolean heightShouldBeChanged(int x) {
@@ -129,10 +169,12 @@ class Terrain {
             int widthOffset = 100;
             beginShape(TRIANGLE_STRIP); // Build triangle strip row by row
             for (int x = 0; x < cols; x++) {
-                fill(getColor(heightMap[x][y]));
+                // fill(getColor(heightMap[x][y]));
+                fill(colors[x][y]);
                 vertex(x * scl - widthOffset, - y * scl, heightMap[x][y]);
 
-                fill(getColor(heightMap[x][y+1]));
+                //fill(getColor(heightMap[x][y+1]));
+                fill(colors[x][y]);
                 vertex(x * scl - widthOffset, - (y + 1) * scl, heightMap[x][y+1]);
             }
             endShape();
